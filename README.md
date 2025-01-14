@@ -1,5 +1,5 @@
 # Proxy of Docker.io
-This is a proxy running on cloudflare worker that proxy docker.io to avoid the rate limiter.
+This is a proxy operating on Cloudflare Workers that forwards requests to Docker.io to bypass the rate limiter.
 
 ## usage
 /etc/docker/daemon.json
