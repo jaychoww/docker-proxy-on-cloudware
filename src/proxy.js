@@ -3,7 +3,7 @@ const DOCKERHUB_AUTH = "https://auth.docker.io/token";
 const DOCKERHUB_REGISTRY = "https://registry-1.docker.io/v2";
 
 // Cache settings
-const CACHE_TIMEOUT = 60 * 60 * 24 * 30; // 24 hours in seconds
+const CACHE_TIME = 60 * 60 * 24 * 30; // 24 hours in seconds
 
 async function debugLog(message, data) {
   console.log(JSON.stringify({
@@ -16,7 +16,13 @@ async function debugLog(message, data) {
 async function handleRequest(request) {
   const url = new URL(request.url);
   const path = url.pathname;
-  
+  const cache = caches.default
+  let response = await cache.match(request)
+
+  if (response) {
+    return response
+  }
+
   await debugLog('Incoming request', { path, method: request.method });
 
   // Handle ping request
@@ -29,7 +35,7 @@ async function handleRequest(request) {
 
   // Parse image name and tag
   let imageName, reference, type;
-  
+
   try {
     if (path.startsWith('/v2/')) {
       const parts = path.slice(4).split('/');
@@ -43,7 +49,7 @@ async function handleRequest(request) {
       imageName = pathParts[0];
       reference = pathParts[1] || 'latest';
       type = 'manifests';
-      console.log("imageName:", imageName);  
+      console.log("imageName:", imageName);
 
     }
     if (!imageName.includes('/')) {
@@ -73,7 +79,7 @@ async function handleRequest(request) {
         'Accept': 'application/json',
       }
     });
-    
+
     if (!authResponse.ok) {
       throw new Error(`Auth response status: ${authResponse.status}, body: ${await authResponse.text()}`);
     }
@@ -90,7 +96,7 @@ async function handleRequest(request) {
     const dockerHubUrl = `${DOCKERHUB_REGISTRY}/${imageName}/${type}/${reference}`;
     await debugLog('Forwarding to Docker Hub', { url: dockerHubUrl });
 
-    const acceptHeader = type === 'manifests' 
+    const acceptHeader = type === 'manifests'
       ? 'application/vnd.docker.distribution.manifest.v2+json,application/vnd.docker.distribution.manifest.list.v2+json'
       : 'application/octet-stream';
 
@@ -101,7 +107,7 @@ async function handleRequest(request) {
       }
     });
 
-    await debugLog('Received Docker Hub response', { 
+    await debugLog('Received Docker Hub response', {
       status: response.status,
       headers: Object.fromEntries(response.headers)
     });
@@ -109,26 +115,39 @@ async function handleRequest(request) {
     if (!response.ok) {
       const errorText = await response.text();
       await debugLog('Docker Hub error response', { error: errorText });
-      return new Response(errorText, { 
+      return new Response(errorText, {
         status: response.status,
         headers: response.headers
       });
     }
 
     // Clone the response and add caching headers
-    const responseClone = new Response(response.body, response);
-    responseClone.headers.set('Cache-Control', `public, max-age=${CACHE_TIMEOUT}`);
-    
-    // Attempt to cache the response
-    try {
-      const cache = caches.default;
-      // await cache.put(request, responseClone.clone());
-      // await debugLog('Response cached successfully');
-    } catch (err) {
-      await debugLog('Cache error', { error: err.message });
-    }
+    // const responseClone = new Response(response.body, response);
+    // responseClone.headers.set('Cache-Control', `public, max-age=${CACHE_TIMEOUT}`);
 
-    return responseClone;
+    // Attempt to cache the response
+    // Only cache successful GET requests
+    if (request.method === 'GET' && response.ok) {
+      // Clone the response before caching
+      const responseToCache = response.clone();
+
+      // Create new response with custom cache headers
+      const modifiedResponse = new Response(responseToCache.body, {
+        status: responseToCache.status,
+        statusText: responseToCache.statusText,
+        headers: responseToCache.headers
+      });
+
+      // Set cache control headers
+      modifiedResponse.headers.set('Cache-Control', `public, max-age=${CACHE_TIME}`);
+
+      // Put in cache
+      await cache.put(request, modifiedResponse.clone());
+
+      return modifiedResponse;
+    }
+    return response;
+
   } catch (error) {
     await debugLog('Request handling error', { error: error.message });
     return new Response(`Failed to proxy request: ${error.message}`, { status: 500 });
