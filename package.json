@@ -1,0 +1,12 @@
+{
+  "name": "docker-proxy",
+  "version": "1.0.0",
+  "main": "src/proxy.js",
+  "scripts": {
+    "build": "wrangler build",
+    "deploy": "wrangler publish"
+  },
+  "devDependencies": {
+    "@cloudflare/wrangler": "^2.0.0"
+  }
+}

@@ -1,0 +1,9 @@
+name = "docker-proxy"
+type = "javascript"
+
+account_id = "your-account-id"
+workers_dev = true
+compatibility_date = "2023-10-01"
+
+[build]
+upload.format = "service-worker"
