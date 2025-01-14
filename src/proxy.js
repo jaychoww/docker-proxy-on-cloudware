@@ -122,8 +122,8 @@ async function handleRequest(request) {
     // Attempt to cache the response
     try {
       const cache = caches.default;
-      await cache.put(request, responseClone.clone());
-      await debugLog('Response cached successfully');
+      // await cache.put(request, responseClone.clone());
+      // await debugLog('Response cached successfully');
     } catch (err) {
       await debugLog('Cache error', { error: err.message });
     }
