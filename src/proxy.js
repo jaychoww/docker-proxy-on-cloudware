@@ -131,7 +131,6 @@ async function handleRequest(request, env) {
     });
 
     if (request.method === 'GET' && response.ok && contentLength && parseInt(contentLength) < maxCacheSize) {
-      try {
         // Clone the response before caching
         const responseToCache = response.clone();
 
@@ -146,17 +145,17 @@ async function handleRequest(request, env) {
         modifiedResponse.headers.set('Cache-Control', `public, max-age=${cacheTime}`);
 
         // Put in cache
+      try {
         await cache.put(request, modifiedResponse.clone());
         await debugLog('Response cached successfully', {
           size: contentLength,
           cacheTime
         });
 
-        return modifiedResponse;
-      } catch (error) {
+      } catch (cacheError) {
         await debugLog('Cache error', { error: cacheError.message });
-        return response;
       }
+      return modifiedResponse;
     }
     return response;
 
