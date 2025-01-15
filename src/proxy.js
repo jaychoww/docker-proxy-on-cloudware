@@ -10,7 +10,7 @@ async function debugLog(message, data) {
   }));
 }
 
-async function handleRequest(request, env) {
+async function handleRequest(request, env, ctx) {
   const maxCacheSize = 128 * 1024 * 1024; // worker will raise an error while the response with body exceed 128MB executes clone() method
   // https://developers.cloudflare.com/workers/platform/limits/#memory
 
@@ -150,7 +150,7 @@ async function handleRequest(request, env) {
         modifiedResponse.headers.set('Cache-Control', `public, max-age=${cacheTime}`);
 
         // Put in cache
-        await cache.put(cacheKey, modifiedResponse.clone());
+        ctx.waitUntil(cache.put(cacheKey, modifiedResponse.clone()));
         await debugLog('Response cached successfully', {
           size: contentLength,
           key: cacheKey,
@@ -170,7 +170,7 @@ async function handleRequest(request, env) {
 export default {
   async fetch(request, env, ctx) {
     try {
-      return await handleRequest(request, env);
+      return await handleRequest(request, env, ctx);
     } catch (error) {
       await debugLog('Unhandled error', { error: error.message, stack: error.stack });
       return new Response(`Internal Server Error: ${error.message}`, { status: 500 });
