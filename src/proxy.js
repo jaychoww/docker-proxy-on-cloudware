@@ -23,6 +23,7 @@ async function handleRequest(request, env) {
   let response = await cache.match(url)
 
   if (response) {
+    await debugLog('Cache hit', {url: request.url});
     return response
   }
 
