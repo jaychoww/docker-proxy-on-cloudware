@@ -153,7 +153,7 @@ async function handleRequest(request, env) {
         });
 
         return modifiedResponse;
-      } catch (cacheError) {
+      } catch (error) {
         await debugLog('Cache error', { error: cacheError.message });
         return response;
       }
