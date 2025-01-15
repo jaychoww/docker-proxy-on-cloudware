@@ -17,13 +17,11 @@ async function handleRequest(request, env) {
   // Get environment variables with defaults
   const cacheTime = parseInt(env.CACHE_TIME || '2592000'); // Default 30 days
 
+  const url = new URL(request.url);
   const path = url.pathname;
   const cache = caches.default
-  const cacheKey = {
-    url: request.url, 
-    method: request.method
-  };
-  const url = new URL(request.url);
+  const cacheKey = new Request(url.toString(), request);
+
   let response = await cache.match(cacheKey);
 
   if (response) {
