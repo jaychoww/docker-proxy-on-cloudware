@@ -11,8 +11,10 @@ async function debugLog(message, data) {
 }
 
 async function handleRequest(request, env) {
+  const maxCacheSize = 128 * 1024 * 1024; // worker will raise an error while the response with body exceed 128MB executes clone() method
+  // https://developers.cloudflare.com/workers/platform/limits/#memory
+
   // Get environment variables with defaults
-  const maxCacheSize = parseInt(env.MAX_CACHE_SIZE || '104857600'); // Default 100MB
   const cacheTime = parseInt(env.CACHE_TIME || '2592000'); // Default 30 days
 
   const url = new URL(request.url);
