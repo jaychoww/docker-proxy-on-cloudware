@@ -121,13 +121,11 @@ async function handleRequest(request) {
       });
     }
 
-    // Clone the response and add caching headers
-    // const responseClone = new Response(response.body, response);
-    // responseClone.headers.set('Cache-Control', `public, max-age=${CACHE_TIMEOUT}`);
+    // Check the size of the response before caching
+    const contentLength = response.headers.get('Content-Length');
+    const maxCacheSize = 100 * 1024 * 1024; // 200MB in bytes
 
-    // Attempt to cache the response
-    // Only cache successful GET requests
-    if (request.method === 'GET' && response.ok) {
+    if (request.method === 'GET' && response.ok && contentLength && parseInt(contentLength) < maxCacheSize) {
       // Clone the response before caching
       const responseToCache = response.clone();
 
