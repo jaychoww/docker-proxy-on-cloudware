@@ -23,11 +23,11 @@ async function handleRequest(request, env) {
   let response = await cache.match(url)
 
   if (response) {
-    await debugLog('Cache hit', {url: request.url});
+    await debugLog('Cache hit', {key: request});
     return response
   }
 
-  await debugLog('Incoming request', {request});
+  await debugLog('Cache miss', {request});
 
   // Handle ping request
   if (path === '/v2/' || path === '/v2') {
@@ -135,7 +135,7 @@ async function handleRequest(request, env) {
 
     if (request.method === 'GET' && response.ok && contentLength && parseInt(contentLength) < maxCacheSize) {
         // Clone the response before caching
-        const responseToCache = response.clone();
+        const responseToCache = response;
 
         // Create new response with custom cache headers
         const modifiedResponse = new Response(responseToCache.body, {
@@ -148,9 +148,10 @@ async function handleRequest(request, env) {
         modifiedResponse.headers.set('Cache-Control', `public, max-age=${cacheTime}`);
 
         // Put in cache
-        await cache.put(request.url, modifiedResponse.clone());
+        await cache.put(request, modifiedResponse.clone());
         await debugLog('Response cached successfully', {
           size: contentLength,
+          key: request,
           cacheTime
         });
 
