@@ -147,16 +147,12 @@ async function handleRequest(request, env) {
         modifiedResponse.headers.set('Cache-Control', `public, max-age=${cacheTime}`);
 
         // Put in cache
-      try {
         await cache.put(request, modifiedResponse.clone());
         await debugLog('Response cached successfully', {
           size: contentLength,
           cacheTime
         });
 
-      } catch (cacheError) {
-        await debugLog('Cache error', { error: cacheError.message });
-      }
       return modifiedResponse;
     }
     return response;
