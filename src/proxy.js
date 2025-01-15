@@ -123,7 +123,7 @@ async function handleRequest(request, env) {
 
     // Check the size of the response before caching
     const contentLength = response.headers.get('Content-Length');
-    
+
     await debugLog('Cache size check', {
       contentLength,
       maxCacheSize,
@@ -131,27 +131,32 @@ async function handleRequest(request, env) {
     });
 
     if (request.method === 'GET' && response.ok && contentLength && parseInt(contentLength) < maxCacheSize) {
-      // Clone the response before caching
-      const responseToCache = response.clone();
+      try {
+        // Clone the response before caching
+        const responseToCache = response.clone();
 
-      // Create new response with custom cache headers
-      const modifiedResponse = new Response(responseToCache.body, {
-        status: responseToCache.status,
-        statusText: responseToCache.statusText,
-        headers: responseToCache.headers
-      });
+        // Create new response with custom cache headers
+        const modifiedResponse = new Response(responseToCache.body, {
+          status: responseToCache.status,
+          statusText: responseToCache.statusText,
+          headers: responseToCache.headers
+        });
 
-      // Set cache control headers
-      modifiedResponse.headers.set('Cache-Control', `public, max-age=${cacheTime}`);
+        // Set cache control headers
+        modifiedResponse.headers.set('Cache-Control', `public, max-age=${cacheTime}`);
 
-      // Put in cache
-      await cache.put(request, modifiedResponse.clone());
-      await debugLog('Response cached successfully', {
-        size: contentLength,
-        cacheTime
-      });
+        // Put in cache
+        await cache.put(request, modifiedResponse.clone());
+        await debugLog('Response cached successfully', {
+          size: contentLength,
+          cacheTime
+        });
 
-      return modifiedResponse;
+        return modifiedResponse;
+      } catch (cacheError) {
+        await debugLog('Cache error', { error: cacheError.message });
+        return response;
+      }
     }
     return response;
 
