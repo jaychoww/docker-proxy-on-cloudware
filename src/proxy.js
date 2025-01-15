@@ -20,13 +20,13 @@ async function handleRequest(request, env) {
   const url = new URL(request.url);
   const path = url.pathname;
   const cache = caches.default
-  let response = await cache.match(request)
+  let response = await cache.match(url)
 
   if (response) {
     return response
   }
 
-  await debugLog('Incoming request', { path, method: request.method });
+  await debugLog('Incoming request', {request});
 
   // Handle ping request
   if (path === '/v2/' || path === '/v2') {
@@ -147,7 +147,7 @@ async function handleRequest(request, env) {
         modifiedResponse.headers.set('Cache-Control', `public, max-age=${cacheTime}`);
 
         // Put in cache
-        await cache.put(request, modifiedResponse.clone());
+        await cache.put(request.url, modifiedResponse.clone());
         await debugLog('Response cached successfully', {
           size: contentLength,
           cacheTime
