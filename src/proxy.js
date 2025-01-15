@@ -2,9 +2,6 @@
 const DOCKERHUB_AUTH = "https://auth.docker.io/token";
 const DOCKERHUB_REGISTRY = "https://registry-1.docker.io/v2";
 
-// Cache settings
-const CACHE_TIME = 60 * 60 * 24 * 30; // 24 hours in seconds
-
 async function debugLog(message, data) {
   console.log(JSON.stringify({
     timestamp: new Date().toISOString(),
@@ -13,7 +10,11 @@ async function debugLog(message, data) {
   }));
 }
 
-async function handleRequest(request) {
+async function handleRequest(request, env) {
+  // Get environment variables with defaults
+  const maxCacheSize = parseInt(env.MAX_CACHE_SIZE || '104857600'); // Default 100MB
+  const cacheTime = parseInt(env.CACHE_TIME || '2592000'); // Default 30 days
+
   const url = new URL(request.url);
   const path = url.pathname;
   const cache = caches.default
@@ -50,10 +51,9 @@ async function handleRequest(request) {
       reference = pathParts[1] || 'latest';
       type = 'manifests';
       console.log("imageName:", imageName);
-
     }
-    if (!imageName.includes('/')) {
 
+    if (!imageName.includes('/')) {
       imageName = `library/${imageName}`;
     }
 
@@ -123,7 +123,12 @@ async function handleRequest(request) {
 
     // Check the size of the response before caching
     const contentLength = response.headers.get('Content-Length');
-    const maxCacheSize = 100 * 1024 * 1024; // 200MB in bytes
+    
+    await debugLog('Cache size check', {
+      contentLength,
+      maxCacheSize,
+      willCache: contentLength && parseInt(contentLength) < maxCacheSize
+    });
 
     if (request.method === 'GET' && response.ok && contentLength && parseInt(contentLength) < maxCacheSize) {
       // Clone the response before caching
@@ -137,10 +142,14 @@ async function handleRequest(request) {
       });
 
       // Set cache control headers
-      modifiedResponse.headers.set('Cache-Control', `public, max-age=${CACHE_TIME}`);
+      modifiedResponse.headers.set('Cache-Control', `public, max-age=${cacheTime}`);
 
       // Put in cache
       await cache.put(request, modifiedResponse.clone());
+      await debugLog('Response cached successfully', {
+        size: contentLength,
+        cacheTime
+      });
 
       return modifiedResponse;
     }
@@ -152,11 +161,13 @@ async function handleRequest(request) {
   }
 }
 
-addEventListener('fetch', event => {
-  event.respondWith(handleRequest(event.request)
-    .catch(async error => {
+export default {
+  async fetch(request, env, ctx) {
+    try {
+      return await handleRequest(request, env);
+    } catch (error) {
       await debugLog('Unhandled error', { error: error.message, stack: error.stack });
       return new Response(`Internal Server Error: ${error.message}`, { status: 500 });
-    })
-  );
-});
+    }
+  }
+};
