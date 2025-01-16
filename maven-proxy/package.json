@@ -1,5 +1,5 @@
 {
-  "name": "docker-proxy",
+  "name": "maven-proxy",
   "version": "1.0.0",
   "main": "src/proxy.js",
   "scripts": {
