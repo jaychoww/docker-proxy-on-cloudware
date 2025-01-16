@@ -1,10 +1,12 @@
 # Proxy of Docker.io
 This is a proxy operating on Cloudflare Workers that forwards requests to Docker.io to bypass the rate limiter.
 
-## Usage
+## DEPLOY
 * Create a worker on cloudflare named "docker-proxy"
 * Connect this worker to the github repo
-* Build it on cloudflare worker
+* Build it
+
+## USAGE
 * Update your docker configuration:
 /etc/docker/daemon.json
 ```json
@@ -17,14 +19,17 @@ This is a proxy operating on Cloudflare Workers that forwards requests to Docker
 
 
 # Proxy of private-maven
-## Usage
+## DEPLOY
 * Create a worker on cloudflare named "maven-proxy"
 * Connect this worker to the github repo
-* Build it on cloudflare worker
-* Update environment Variable of Woker
+* Set `Deploy Command` = `npx wrangler deploy --keep-vars` in Cloudflare workers dashboard
+* Create an environment Variable named `MAVEN_REPO_URL` in Cloudflare workers dashboard
+* Build it
 ```
      MAVEN_REPO_URL=https://your-private-maven.com
 ```
+
+## USAGE
 * Update your maven configuration:
 ```
 MAVEN URL: https://proxy-domain-of-your-worker.workers.dev/repository
