@@ -21,7 +21,11 @@ This is a proxy operating on Cloudflare Workers that forwards requests to Docker
 * Create a worker on cloudflare named "maven-proxy"
 * Connect this worker to the github repo
 * Build it on cloudflare worker
+* Update environment Variable of Woker
+```
+     MAVEN_REPO_URL=https://your-private-maven.com
+```
 * Update your maven configuration:
 ```
-MAVEN URL: https://proxy-domain-of-your-worker.workers.dev/
+MAVEN URL: https://proxy-domain-of-your-worker.workers.dev/repository
 ```

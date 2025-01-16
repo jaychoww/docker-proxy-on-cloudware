@@ -8,5 +8,5 @@ compatibility_date = "2023-10-01"
 [build]
 upload.format = "service-worker"
 [vars]
-MAVEN_REPO_URL = "https://my-maven.com"
+MAVEN_REPO_URL = "https://repo.maven.apache.org/maven2/"
 CACHE_TTL = "2592000"
