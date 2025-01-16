@@ -1,7 +1,7 @@
 # Proxy of Docker.io
 This is a proxy operating on Cloudflare Workers that forwards requests to Docker.io to bypass the rate limiter.
 
-## usage
+## Usage
 * Create a worker on cloudflare named "docker-proxy"
 * Connect this worker to the github repo
 * Build it on cloudflare worker
@@ -11,4 +11,17 @@ This is a proxy operating on Cloudflare Workers that forwards requests to Docker
 {
     "registry-mirrors": ["https://proxy-domain-of-your-worker.workers.dev"],
 }
+```
+
+### [offical document about cache API](https://developers.cloudflare.com/workers/examples/cache-api/)
+
+
+# Proxy of private-maven
+## Usage
+* Create a worker on cloudflare named "maven-proxy"
+* Connect this worker to the github repo
+* Build it on cloudflare worker
+* Update your maven configuration:
+```
+MAVEN URL: https://proxy-domain-of-your-worker.workers.dev/
 ```

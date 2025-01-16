@@ -1,0 +1,11 @@
+name = "docker-proxy"
+type = "javascript"
+main = "src/proxy.js"
+
+workers_dev = true
+compatibility_date = "2023-10-01"
+
+[build]
+upload.format = "service-worker"
+[vars]
+CACHE_TTL = "2592000"

@@ -15,7 +15,7 @@ async function handleRequest(request, env, ctx) {
   // https://developers.cloudflare.com/workers/platform/limits/#memory
 
   // Get environment variables with defaults
-  const cacheTime = parseInt(env.CACHE_TIME || '2592000'); // Default 30 days
+  const cacheTime = parseInt(env.CACHE_TTL || '2592000'); // Default 30 days
 
   const url = new URL(request.url);
   const path = url.pathname;
