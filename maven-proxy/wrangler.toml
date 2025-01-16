@@ -1,4 +1,4 @@
-name = "docker-proxy"
+name = "maven-proxy"
 type = "javascript"
 main = "src/proxy.js"
 
